@@ -129,10 +129,25 @@ ggplot(wines, aes(total.sulfur.dioxide)) +
 summary(wines$total.sulfur.dioxide)
 ```
 
-```{r echo=FALSE, sulfur.dioxide.ratio}
+```{r new_variables}
 wines$bound.sulfur.dioxide <- with(wines, total.sulfur.dioxide - free.sulfur.dioxide)
 wines$sulfur.dioxide.ratio <- with(wines, free.sulfur.dioxide / bound.sulfur.dioxide)
+```
 
+I created a bound sulfur dioxide variable by subtracting the free from the total sulfur dioxide. Then I created a feature consisting of the ratio between the free and bound sulfur dioxide present in the wine.
+
+```{r echo=FALSE, bound.sulfur.dioxide}
+ggplot(wines, aes(bound.sulfur.dioxide)) +
+  geom_histogram(binwidth = 3)
+```
+
+```{r echo=FALSE, bound.sulfur.dioxide_summary}
+summary(wines$bound.sulfur.dioxide)
+```
+
+It looks very similar to the total sulfur dioxide.
+
+```{r echo=FALSE, sulfur.dioxide.ratio}
 p1 <- ggplot(wines, aes(sulfur.dioxide.ratio)) +
   geom_histogram(binwidth = .005)
   
@@ -147,8 +162,7 @@ grid.arrange(p1, p2)
 summary(wines$sulfur.dioxide.ratio)
 ```
 
-First I created a bound sulfur dioxide variable, and then a feature consisting of the ratio between the free and bound sulfur dioxide present in the wine. 
-I also transformed the scale to log10 to better visualize the distribution.
+I transformed the scale to log10 to better visualize the distribution.
 Maybe it will be useful when trying to predict the quality, or even give us some insight about the data.
 
 ```{r echo=FALSE, sulphates}
