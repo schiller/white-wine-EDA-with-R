@@ -1,7 +1,20 @@
+# ---
+# title: "White Wine Quality by Luiz Schiller"
+# author: Luiz Schiller
+# date: November 27, 2016
+# output:
+#   md_document:
+#     variant: markdown_github
+# ---
+
 White Wine Quality by Luiz Schiller
 ========================================================
 
-```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
+```
+
+```{r, packages}
 # Load all of the packages that you end up using
 # in your analysis in this code chunk.
 
@@ -11,15 +24,12 @@ White Wine Quality by Luiz Schiller
 
 library(ggplot2)
 library(GGally)
-library(devtools)
-# install_github("schloerke/gsoc-ggduo-test")
-library(GSoCggduoTest)
 library(RColorBrewer)
 library(memisc)
 library(gridExtra)
 ```
 
-```{r echo=FALSE, Load_the_Data}
+```{r, Load_the_Data}
 # Load the Data
 wines <- read.csv('wineQualityWhites.csv')
 wines$X <- NULL
@@ -43,23 +53,30 @@ The attributes are the following:
 12. quality: score between 0 and 10 (based on sensory data).
 
 # Univariate Plots Section
-```{r echo=FALSE, structure}
+```{r, structure}
 str(wines)
 ```
 
-```{r echo=FALSE, summary}
+```{r, summary}
 summary(wines)
+```
+
+```{r, univ_cont}
+univ_cont <- function(feature, bins) {
+    ggplot(data = wines, aes_string(x = feature)) +
+        geom_histogram(binwidth = bins)
+}
 ```
 
 ## Main feature of interest: Quality
 
-```{r echo=FALSE, quality}
-ggplot(wines, aes(quality)) +
-  geom_histogram(binwidth = .5) +
+```{r, quality}
+univ_cont("quality", 0.5) +
   scale_x_continuous(breaks = seq(3, 9, 1))
 ```
 
-```{r echo=FALSE, quality_summary}
+
+```{r, quality_summary}
 summary(wines$quality)
 ```
 
@@ -67,41 +84,37 @@ Quality follows a normal-like distribution with discrete integer values.
 
 ## Regarding acidity
 
-```{r echo=FALSE, fixed.acidity}
-ggplot(wines, aes(fixed.acidity)) +
-  geom_histogram(binwidth = .1)
+```{r, fixed.acidity}
+univ_cont("fixed.acidity", .1)
 ```
 
-```{r echo=FALSE, fixed.acidity_summary}
+```{r, fixed.acidity_summary}
 summary(wines$fixed.acidity)
 ```
 
-```{r echo=FALSE, volatile.acidity}
-ggplot(wines, aes(volatile.acidity)) +
-  geom_histogram(binwidth = .01)
+```{r, volatile.acidity}
+univ_cont("volatile.acidity", .01)
 ```
 
-```{r echo=FALSE, volatile.acidity_summary}
+```{r, volatile.acidity_summary}
 summary(wines$volatile.acidity)
 ```
 
-```{r echo=FALSE, citric.acid}
-ggplot(wines, aes(citric.acid)) +
-  geom_histogram(binwidth = .01)
+```{r, citric.acid}
+univ_cont("citric.acid", .01)
 ```
 
-```{r echo=FALSE, citric.acid_summary}
+```{r, citric.acid_summary}
 summary(wines$citric.acid)
 ```
 
 There is an interesting peak at .49 and a smaller one at .74g / dm^3. This suggests me that maybe a standard amount of citric acid is added to some of the wines.
 
-```{r echo=FALSE, pH}
-ggplot(wines, aes(pH)) +
-  geom_histogram(binwidth = .01)
+```{r, pH}
+univ_cont("pH", .01)
 ```
 
-```{r echo=FALSE, pH_summary}
+```{r, pH_summary}
 summary(wines$pH)
 ```
 
@@ -109,68 +122,64 @@ The pH shows a bell shaped distribution. I wonder how it relates individually to
 
 ## Regarding SO2
 
-```{r echo=FALSE, free.sulfur.dioxide}
-ggplot(wines, aes(free.sulfur.dioxide)) +
-  geom_histogram(binwidth = 2)
+```{r, free.sulfur.dioxide}
+univ_cont("free.sulfur.dioxide", 2)
 ```
 
-```{r echo=FALSE, free.sulfur.dioxide_summary}
+```{r, free.sulfur.dioxide_summary}
 summary(wines$free.sulfur.dioxide)
 ```
 
 Free sulfur dioxide has some extreme outliers to the right of the curve.
 
-```{r echo=FALSE, total.sulfur.dioxide}
-ggplot(wines, aes(total.sulfur.dioxide)) +
-  geom_histogram(binwidth = 4)
+```{r, total.sulfur.dioxide}
+univ_cont("total.sulfur.dioxide", 4)
 ```
 
-```{r echo=FALSE, total.sulfur.dioxide_summary}
+```{r, total.sulfur.dioxide_summary}
 summary(wines$total.sulfur.dioxide)
 ```
 
-```{r new_variables}
-wines$bound.sulfur.dioxide <- with(wines, total.sulfur.dioxide - free.sulfur.dioxide)
-wines$sulfur.dioxide.ratio <- with(wines, free.sulfur.dioxide / bound.sulfur.dioxide)
+```{r echo=TRUE, new_variables}
+wines$bound.sulfur.dioxide <- with(wines, 
+                                   total.sulfur.dioxide - free.sulfur.dioxide)
+wines$sulfur.dioxide.ratio <- with(wines, 
+                                   free.sulfur.dioxide / bound.sulfur.dioxide)
 ```
 
 I created a bound sulfur dioxide variable by subtracting the free from the total sulfur dioxide. Then I created a feature consisting of the ratio between the free and bound sulfur dioxide present in the wine.
 
-```{r echo=FALSE, bound.sulfur.dioxide}
-ggplot(wines, aes(bound.sulfur.dioxide)) +
-  geom_histogram(binwidth = 3)
+```{r, bound.sulfur.dioxide}
+univ_cont("bound.sulfur.dioxide", 3)
 ```
 
-```{r echo=FALSE, bound.sulfur.dioxide_summary}
+```{r, bound.sulfur.dioxide_summary}
 summary(wines$bound.sulfur.dioxide)
 ```
 
 It looks very similar to the total sulfur dioxide.
 
-```{r echo=FALSE, sulfur.dioxide.ratio}
-p1 <- ggplot(wines, aes(sulfur.dioxide.ratio)) +
-  geom_histogram(binwidth = .005)
+```{r, sulfur.dioxide.ratio}
+p1 <- univ_cont("sulfur.dioxide.ratio", .005)
   
-p2 <- ggplot(wines, aes(sulfur.dioxide.ratio)) +
-  geom_histogram(binwidth = .005) +
+p2 <- univ_cont("sulfur.dioxide.ratio", .005) +
   scale_x_log10()
 
 grid.arrange(p1, p2)
 ```
 
-```{r echo=FALSE, sulfur.dioxide.ratio_summary}
+```{r, sulfur.dioxide.ratio_summary}
 summary(wines$sulfur.dioxide.ratio)
 ```
 
 I transformed the scale to log10 to better visualize the distribution.
 Maybe it will be useful when trying to predict the quality, or even give us some insight about the data.
 
-```{r echo=FALSE, sulphates}
-ggplot(wines, aes(sulphates)) +
-  geom_histogram(binwidth = .01)
+```{r, sulphates}
+univ_cont("sulphates", .01)
 ```
 
-```{r echo=FALSE, sulphates_summary}
+```{r, sulphates_summary}
 summary(wines$sulphates)
 ```
 
@@ -178,47 +187,41 @@ Sulphates are a little positively skewed. Since it can contribute to sulfur diox
 
 ## Other attributes
 
-```{r echo=FALSE, residual.sugar}
-p1 <- ggplot(wines, aes(residual.sugar)) +
-  geom_histogram(binwidth = .5)
+```{r, residual.sugar}
+p1 <- univ_cont("residual.sugar", .5)
 
-p2 <- ggplot(wines, aes(residual.sugar)) +
-  geom_histogram(binwidth = .02) +
+p2 <- univ_cont("residual.sugar", .02) +
   scale_x_log10(breaks = c(1.3, 3, 8))
 
 grid.arrange(p1, p2)
 ```
 
-```{r echo=FALSE, residual.sugar_summary}
+```{r, residual.sugar_summary}
 summary(wines$residual.sugar)
 ```
 
 I transformed the residual sugar to a log10 scale to better visualize its distribution. The transformed variable appears bimodal, with peaks around 1.3 and 8.
 
-```{r echo=FALSE, chlorides}
-p1 <- ggplot(wines, aes(chlorides)) +
-  geom_histogram(binwidth = .002)
+```{r, chlorides}
+p1 <- univ_cont("chlorides", .002)
 
-p2 <- ggplot(wines, aes(chlorides)) +
-  geom_histogram(binwidth = .01) +
+p2 <- univ_cont("chlorides", .01) +
   scale_x_log10(breaks = c(.01, .03, .10, .20))
 
 grid.arrange(p1, p2)
 ```
 
-```{r echo=FALSE, chlorides_summary}
+```{r, chlorides_summary}
 summary(wines$chlorides)
 ```
 
 I transformed the long tail distribution with a log10 scale so it could be better visualized.
 After the transformation, the chlorides histogram appears normal, with some outliers on the right side of the curve.
 
-```{r echo=FALSE, warning=FALSE, density}
-p1 <- ggplot(wines, aes(density)) +
-  geom_histogram(binwidth = .0005)
+```{r, density}
+p1 <- univ_cont("density", .0005)
 
-p2 <- ggplot(wines, aes(density)) +
-  geom_histogram(binwidth = .0001) +
+p2 <- univ_cont("density", .0001) +
   scale_x_continuous(limits = c(quantile(wines$density, .001),
                                 quantile(wines$density, .999)),
                      breaks = seq(.988, 1.006, .002))
@@ -226,18 +229,21 @@ p2 <- ggplot(wines, aes(density)) +
 grid.arrange(p1, p2)
 ```
 
-```{r echo=FALSE, density_summary}
+```{r, density_summary}
 summary(wines$density)
 ```
 
 Most of the density values are between .99 and 1.00 g / cm3, but there are some outliers near 1.01 and 1.04.
 
-```{r echo=FALSE, alcohol}
-ggplot(wines, aes(alcohol)) +
-  geom_histogram(binwidth = .01)
+```{r, alcohol}
+p1 <- univ_cont("alcohol", .01)
+
+p2 <- univ_cont("alcohol", .1)
+
+grid.arrange(p1, p2)
 ```
 
-```{r echo=FALSE, alcohol_summary}
+```{r, alcohol_summary}
 summary(wines$alcohol)
 ```
 
@@ -270,28 +276,37 @@ I preformed a log transformation on the residual sugar and chlorides distributio
 
 
 # Bivariate Plots Section
-```{r echo=FALSE, Bivariate_Plots}
-ggpairs(wines, axisLabels = 'internal',
-        upper = list(continuous = wrap(color_cor, breaks = 10)),
-        lower = list(continuous = wrap("points", shape = I('.'), alpha = 1/5)))
+
+```{r, Correlation_Matrix}
+ggcorr(wines, label = TRUE, hjust = .9, size = 3, layout.exp = 2)
 ```
 
-This scatterplot and correlation matrix naturally shows strong correlations between free sulfur dioxide, total sulfur dioxide and the constructed variables bound sulfur dioxide and sulfur dioxide ratio.
+This correlation matrix naturally shows strong correlations between free sulfur dioxide, total sulfur dioxide and the constructed variables bound sulfur dioxide and sulfur dioxide ratio.
 
 It also shows interesting relations between residual.sugar vs density and alcohol vs density.
 
+```{r}
+biv_cont <- function(x, y, xq1 = .00, xq2 = .99, yq1 = .00, yq2 = .99) {
+  ggplot(wines, aes_string(x, y)) +
+    geom_jitter(alpha = 1/10) +
+    coord_cartesian(xlim = c(quantile(wines[,x], xq1), 
+                             quantile(wines[,x], xq2)),
+                    ylim = c(quantile(wines[,y], yq1), 
+                             quantile(wines[,y], yq2)))
+}
+```
+
 ## Density, residual sugar and alcohol
+```{r, density_sugar_alcohol}
+p1 <- biv_cont("residual.sugar", "density", 0, .999, 0, .999) +
+  geom_smooth(method = "lm") +
+  coord_trans(x = "log10", 
+              limx = c(quantile(wines$residual.sugar, 0), 
+                       quantile(wines$residual.sugar, .999)), 
+              limy = c(quantile(wines$density, 0), 
+                       quantile(wines$density, .999)))
 
-```{r echo=FALSE, density_sugar_alcohol}
-p1 <- ggplot(wines, aes(residual.sugar, density)) +
-  geom_jitter(alpha = 1/10) +
-  coord_cartesian(xlim = c(0, quantile(wines$residual.sugar, .999)),
-                  ylim = c(min(wines$density), quantile(wines$density, .999))) +
-  geom_smooth(method = "lm")
-
-p2 <- ggplot(wines, aes(alcohol, density)) +
-  geom_jitter(alpha = 1/10) +
-  coord_cartesian(ylim = c(min(wines$density), quantile(wines$density, .999))) +
+p2 <- biv_cont("alcohol", "density", 0, .999, 0, .999) +
   geom_smooth(method = "lm")
 
 grid.arrange(p1, p2, ncol = 2)
@@ -301,26 +316,14 @@ Density varies aproximately linearly with residual sugar (positive correlation) 
 
 ## Sulfur dioxide
 
-```{r echo=FALSE, sulfur_dioxide}
-p1 <- ggplot(wines, aes(bound.sulfur.dioxide, free.sulfur.dioxide)) +
-  geom_jitter(alpha = 1/10) +
-  coord_cartesian(xlim = c(0, quantile(wines$bound.sulfur.dioxide, .99)),
-                  ylim = c(0, quantile(wines$free.sulfur.dioxide, .99)))
+```{r, sulfur_dioxide}
+p1 <- biv_cont("bound.sulfur.dioxide", "free.sulfur.dioxide")
 
-p2 <- ggplot(wines, aes(sulfur.dioxide.ratio, free.sulfur.dioxide)) +
-  geom_jitter(alpha = 1/10) +
-  coord_cartesian(xlim = c(0, quantile(wines$sulfur.dioxide.ratio, .99)),
-                  ylim = c(0, quantile(wines$free.sulfur.dioxide, .99)))
+p2 <- biv_cont("sulfur.dioxide.ratio", "free.sulfur.dioxide")
 
-p3 <- ggplot(wines, aes(sulfur.dioxide.ratio, bound.sulfur.dioxide)) +
-  geom_jitter(alpha = 1/10) +
-  coord_cartesian(xlim = c(0, quantile(wines$sulfur.dioxide.ratio, .99)),
-                  ylim = c(0, quantile(wines$bound.sulfur.dioxide, .99)))
+p3 <- biv_cont("sulfur.dioxide.ratio", "bound.sulfur.dioxide")
 
-p4 <- ggplot(wines, aes(sulfur.dioxide.ratio, total.sulfur.dioxide)) +
-  geom_jitter(alpha = 1/10) +
-  coord_cartesian(xlim = c(0, quantile(wines$sulfur.dioxide.ratio, .99)),
-                  ylim = c(0, quantile(wines$total.sulfur.dioxide, .99)))
+p4 <- biv_cont("sulfur.dioxide.ratio", "total.sulfur.dioxide")
 
 grid.arrange(p1, p2, p3, p4)
 ```
@@ -329,28 +332,13 @@ The sulfur dioxide ratio increases along with the free sulfur dioxide, and wines
 
 ## Acids
 
-```{r echo=FALSE, acids}
-p1 <- ggplot(wines, aes(fixed.acidity, pH)) +
-  geom_jitter(alpha = 1/10) +
-  coord_cartesian(xlim = c(quantile(wines$fixed.acidity, .01),
-                           quantile(wines$fixed.acidity ,.99)),
-                  ylim = c(quantile(wines$pH, .01),
-                           quantile(wines$pH ,.99))) +
+```{r, acids}
+p1 <- biv_cont("fixed.acidity", "pH", .01, .99, .01, .99) +
   geom_smooth(method = "lm")
 
-p2 <- ggplot(wines, aes(volatile.acidity, pH)) +
-  geom_jitter(alpha = 1/10) +
-  coord_cartesian(xlim = c(quantile(wines$volatile.acidity, .01),
-                           quantile(wines$volatile.acidity ,.99)),
-                  ylim = c(quantile(wines$pH, .01),
-                           quantile(wines$pH ,.99)))
+p2 <- biv_cont("volatile.acidity", "pH", .01, .99, .01, .99)
 
-p3 <- ggplot(wines, aes(citric.acid, pH)) +
-  geom_jitter(alpha = 1/10) +
-  coord_cartesian(xlim = c(quantile(wines$citric.acid, .01),
-                           quantile(wines$citric.acid ,.99)),
-                  ylim = c(quantile(wines$pH, .01),
-                           quantile(wines$pH ,.99)))
+p3 <- biv_cont("citric.acid", "pH", .01, .99, .01, .99)
 
 grid.arrange(p1, p2, p3, ncol = 2)
 ```
@@ -359,185 +347,91 @@ The only acid concentration that shows some considerable correlation with pH is 
 
 ## Main feature of interest: Quality
 
-```{r echo=FALSE, quality_fixed.acidity}
-p1 <- ggplot(wines, aes(fixed.acidity, quality)) +
+```{r, box_jitter}
+box_jitter <- function(y, lim = .001) {
+  ggplot(wines, aes_string("ordered(quality)", y)) +
+  geom_boxplot(color="blue") +
   geom_jitter(alpha = 1/10) +
-  coord_cartesian(xlim = c(quantile(wines$fixed.acidity, .001), 
-                           quantile(wines$fixed.acidity, .999)))
+  coord_cartesian(ylim = c(quantile(wines[,y], lim), 
+                           quantile(wines[,y], 1-lim)))
+}
+```
 
-p2 <- ggplot(wines, aes(ordered(quality), fixed.acidity)) +
-  geom_boxplot() +
-  coord_flip(ylim = c(quantile(wines$fixed.acidity, .001), 
-                           quantile(wines$fixed.acidity, .999)))
-
-grid.arrange(p1, p2)
+```{r, quality_fixed.acidity}
+box_jitter("fixed.acidity")
 ```
 
 Better quality wines seem to have smaller fixed acidities on average.
 
-```{r echo=FALSE, quality_volatile.acidity}
-p1 <- ggplot(wines, aes(volatile.acidity, quality)) +
-  geom_jitter(alpha = 1/10) +
-  coord_cartesian(xlim = c(0, quantile(wines$volatile.acidity, .999)))
-
-p2 <- ggplot(wines, aes(ordered(quality), volatile.acidity)) +
-  geom_boxplot() +
-  coord_flip(ylim = c(0, quantile(wines$volatile.acidity, .999)))
-
-grid.arrange(p1, p2)
+```{r, quality_volatile.acidity}
+box_jitter("volatile.acidity")
 ```
 
 The same seems to apply with volatile acidity, but nothing very conclusive.
 
-```{r echo=FALSE, quality_citric.acid}
-p1 <- ggplot(wines, aes(citric.acid, quality)) +
-  geom_jitter(alpha = 1/10) +
-  coord_cartesian(xlim = c(0, quantile(wines$citric.acid, .99)))
-
-p2 <- ggplot(wines, aes(ordered(quality), citric.acid)) +
-  geom_boxplot() +
-  coord_flip(ylim = c(0, quantile(wines$citric.acid, .99)))
-
-grid.arrange(p1, p2)
+```{r, quality_citric.acid}
+box_jitter("citric.acid")
 ```
 
 The low correlation on the panel above can be seen on these charts of quality by citric acid.
 
-```{r echo=FALSE, quality_pH}
-p1 <- ggplot(wines, aes(pH, quality)) +
-  geom_jitter(alpha = 1/10)
-
-p2 <- ggplot(wines, aes(ordered(quality), pH)) +
-  geom_boxplot() +
-  coord_flip()
-
-grid.arrange(p1, p2)
+```{r, quality_pH}
+box_jitter("pH")
 ```
 
 Except for wines with quality score 3, the median pH increases along with quality score.
 
-```{r echo=FALSE, quality_free.sulfur.dioxide}
-p1 <- ggplot(wines, aes(free.sulfur.dioxide, quality)) +
-  geom_jitter(alpha = 1/10) +
-  coord_cartesian(xlim = c(0, quantile(wines$free.sulfur.dioxide, .99)))
-
-p2 <- ggplot(wines, aes(ordered(quality), free.sulfur.dioxide)) +
-  geom_boxplot() +
-  coord_flip(ylim = c(0, quantile(wines$free.sulfur.dioxide, .99)))
-
-grid.arrange(p1, p2)
+```{r, quality_free.sulfur.dioxide}
+box_jitter("free.sulfur.dioxide")
 ```
 
 No clear relation between free sulfur dioxide and quality.
 
-```{r echo=FALSE, quality_bound.sulfur.dioxide}
-p1 <- ggplot(wines, aes(bound.sulfur.dioxide, quality)) +
-  geom_jitter(alpha = 1/10) +
-  coord_cartesian(xlim = c(0, quantile(wines$bound.sulfur.dioxide, .99)))
-
-p2 <- ggplot(wines, aes(ordered(quality), bound.sulfur.dioxide)) +
-  geom_boxplot() +
-  coord_flip(ylim = c(0, quantile(wines$bound.sulfur.dioxide, .99)))
-
-grid.arrange(p1, p2)
+```{r, quality_bound.sulfur.dioxide}
+box_jitter("bound.sulfur.dioxide")
 ```
 
 Here a trend can be seen. Overall, quality decreases as bound sulfur dioxide increases.
 
-```{r echo=FALSE, quality_total.sulfur.dioxide}
-p1 <- ggplot(wines, aes(total.sulfur.dioxide, quality)) +
-  geom_jitter(alpha = 1/10) +
-  coord_cartesian(xlim = c(0, quantile(wines$total.sulfur.dioxide, .999)))
-
-p2 <- ggplot(wines, aes(ordered(quality), total.sulfur.dioxide)) +
-  geom_boxplot() +
-  coord_flip(ylim = c(0, quantile(wines$total.sulfur.dioxide, .999)))
-
-grid.arrange(p1, p2)
+```{r, quality_total.sulfur.dioxide}
+box_jitter("total.sulfur.dioxide")
 ```
 
 Here a slight correlation can be seen, somewhat similar to that of bound sulfur dioxide.
 
-```{r echo=FALSE, quality_sulfur.dioxide.ratio}
-p1 <- ggplot(wines, aes(sulfur.dioxide.ratio, quality)) +
-  geom_jitter(alpha = 1/10) +
-  coord_cartesian(xlim = c(0, quantile(wines$sulfur.dioxide.ratio, .99)))
-
-p2 <- ggplot(wines, aes(ordered(quality), sulfur.dioxide.ratio)) +
-  geom_boxplot() +
-  coord_flip(ylim = c(0, quantile(wines$sulfur.dioxide.ratio, .99)))
-
-grid.arrange(p1, p2)
+```{r, quality_sulfur.dioxide.ratio}
+box_jitter("sulfur.dioxide.ratio", .01)
 ```
 
 In general, quality increases as the ration of free and bound sulfur dioxide increases, but the correlation is weak.
 
-```{r echo=FALSE, quality_sulphates}
-p1 <- ggplot(wines, aes(sulphates, quality)) +
-  geom_jitter(alpha = 1/10)
-
-p2 <- ggplot(wines, aes(ordered(quality), sulphates)) +
-  geom_boxplot() +
-  coord_flip()
-
-grid.arrange(p1, p2)
+```{r, quality_sulphates}
+box_jitter("sulphates")
 ```
 
 Sulphates don't seem to add much isolatedly.
 
-```{r echo=FALSE, quality_residual.sugar}
-p1 <- ggplot(wines, aes(residual.sugar, quality)) +
-  geom_jitter(alpha = 1/10) +
-  coord_cartesian(xlim = c(0, quantile(wines$residual.sugar, .99)))
-
-p2 <- ggplot(wines, aes(ordered(quality), residual.sugar)) +
-  geom_boxplot() +
-  coord_flip(ylim = c(0, quantile(wines$residual.sugar, .99)))
-
-grid.arrange(p1, p2)
+```{r, quality_residual.sugar}
+box_jitter("residual.sugar") +
+  coord_trans(y = "log10")
 ```
 
 Nothing very clear from these charts.
 
-```{r echo=FALSE, quality_chlorides}
-p1 <- ggplot(wines, aes(chlorides, quality)) +
-  geom_jitter(alpha = 1/10) +
-  coord_cartesian(xlim = c(0, quantile(wines$chlorides, .99)))
-
-p2 <- ggplot(wines, aes(ordered(quality), chlorides)) +
-  geom_boxplot() +
-  coord_flip(ylim = c(0, quantile(wines$chlorides, .99)))
-
-grid.arrange(p1, p2)
+```{r, quality_chlorides}
+box_jitter("chlorides", .01)
 ```
 
 There is a curious amount of outliers for scores 5 and 6. I wonder why it happens.
 
-```{r echo=FALSE, quality_density}
-p1 <- ggplot(wines, aes(density, quality)) +
-  geom_jitter(alpha = 1/10) +
-  coord_cartesian(xlim = c(quantile(wines$density, .01),
-                           quantile(wines$density, .99)))
-
-p2 <- ggplot(wines, aes(ordered(quality), density)) +
-  geom_boxplot() +
-  coord_flip(ylim = c(quantile(wines$density, .01),
-                           quantile(wines$density, .99)))
-
-grid.arrange(p1, p2)
+```{r, quality_density}
+box_jitter("density")
 ```
 
 A greater correlation is more evident here. This seems to be one of the most promising relations so far. Maybe it has something to do with the fact that density is highly correlated with residual sugar and alcohol concentration, features that may be more easily detected by the experts palate.
 
-```{r echo=FALSE, quality_alcohol}
-p1 <- ggplot(wines, aes(alcohol, quality)) +
-  geom_jitter(alpha = 1/10)
-
-p2 <- ggplot(wines, aes(ordered(quality), alcohol)) +
-  geom_boxplot() +
-  coord_flip()
-
-grid.arrange(p1, p2)
+```{r, quality_alcohol}
+box_jitter("alcohol")
 ```
 
 Alcohol is the variable with the greatest correlation with quality. It can be seen on the chart. Wines with grades 3 and 4 are going against the trend, but there are not many of those.
@@ -565,36 +459,50 @@ The one between density and residual sugar. These features have a Pearson's corr
 
 I am dividing alcohol in bins to be able to plot density, alcohol, residual sugar and quality together and see how they relate with eachother:
 
-```{r echo=FALSE, alcohol_buckets}
+```{r, alcohol_buckets}
 wines$alcohol.bins <- with(wines, cut(alcohol, 4))
 
 ggplot(wines, aes(residual.sugar, density, color = alcohol.bins)) +
   geom_point(alpha = 1/2) +
-  coord_cartesian(xlim = c(0, quantile(wines$residual.sugar, .99)),
-                  ylim = c(min(wines$density), quantile(wines$density, .999))) +
-  scale_color_brewer(type = 'div',
-                     palette = 'RdYlBu',
+  geom_smooth(method = "lm") +
+  coord_trans(x = "log10", 
+              limx = c(min(wines$residual.sugar),
+                       quantile(wines$residual.sugar, .999)),
+              limy = c(min(wines$density),
+                       quantile(wines$density, .999))) +
+  scale_color_brewer(type = 'seq',
+                     palette = 'YlOrRd',
                      guide = guide_legend(title = 'Alcohol',
                                           reverse = T,
-                                          override.aes = list(alpha = 1, size = 2)))
+                                          override.aes = list(alpha = 1, 
+                                                              size = 2)))
 ```
 
-```{r echo=FALSE, alcohol_facets}
-ggplot(wines, aes(residual.sugar, density, color = ordered(quality))) +
+```{r, quality_levels}
+wines$quality.bins <- with(wines, 
+                           cut(quality,
+                               breaks = c(2, 4, 5, 6, 7, 9),
+                               labels = c("[3, 4]", "5", "6", "7", "[8, 9]")))
+
+ggplot(wines, aes(residual.sugar, density, color = quality.bins)) +
   geom_point(alpha = 2/3) +
-  coord_cartesian(xlim = c(0, quantile(wines$residual.sugar, .99)),
-                  ylim = c(min(wines$density), quantile(wines$density, .999))) +
-  scale_color_brewer(type = 'div',
-                     palette = 'RdYlBu',
+  geom_smooth(method = "lm", se = FALSE) +
+  coord_trans(x = "log10", 
+              limx = c(min(wines$residual.sugar),
+                       quantile(wines$residual.sugar, .999)),
+              limy = c(min(wines$density),
+                       quantile(wines$density, .999))) +
+  scale_color_brewer(type = 'seq',
+                     palette = 'YlOrRd',
                      guide = guide_legend(title = 'Quality',
                                           reverse = T,
-                                          override.aes = list(alpha = 1, size = 2))) +
-  facet_wrap(~ alcohol.bins)
+                                          override.aes = list(alpha = 1, 
+                                                              size = 2)))
 ```
 
-It can be seen that the facets corresponding to higher amounts of alcohol show wines of better quality in average, and, for a given residual sugar, quality increases as density decreases.
+It can be seen that the points corresponding to higher amounts of alcohol show wines of better quality in average, and, for a given residual sugar, quality increases as density decreases.
 
-```{r echo=FALSE, sulfur_quality}
+```{r, sulfur_quality}
 p1 <- ggplot(wines, aes(bound.sulfur.dioxide, free.sulfur.dioxide, color = ordered(quality))) +
   geom_jitter(alpha = 1/3) +
   coord_cartesian(xlim = c(0, quantile(wines$bound.sulfur.dioxide, .99)),
@@ -603,7 +511,8 @@ p1 <- ggplot(wines, aes(bound.sulfur.dioxide, free.sulfur.dioxide, color = order
                      palette = 'RdYlBu',
                      guide = guide_legend(title = 'Quality',
                                           reverse = T,
-                                          override.aes = list(alpha = 1, size = 2)))
+                                          override.aes = list(alpha = 1, 
+                                                              size = 2)))
 
 p2 <- ggplot(wines, aes(sulfur.dioxide.ratio, free.sulfur.dioxide, color = ordered(quality))) +
   geom_jitter(alpha = 1/3) +
@@ -613,7 +522,8 @@ p2 <- ggplot(wines, aes(sulfur.dioxide.ratio, free.sulfur.dioxide, color = order
                      palette = 'RdYlBu',
                      guide = guide_legend(title = 'Quality',
                                           reverse = T,
-                                          override.aes = list(alpha = 1, size = 2)))
+                                          override.aes = list(alpha = 1, 
+                                                              size = 2)))
 
 p3 <- ggplot(wines, aes(sulfur.dioxide.ratio, bound.sulfur.dioxide, color = ordered(quality))) +
   geom_jitter(alpha = 1/3) +
@@ -623,7 +533,8 @@ p3 <- ggplot(wines, aes(sulfur.dioxide.ratio, bound.sulfur.dioxide, color = orde
                      palette = 'RdYlBu',
                      guide = guide_legend(title = 'Quality',
                                           reverse = T,
-                                          override.aes = list(alpha = 1, size = 2)))
+                                          override.aes = list(alpha = 1, 
+                                                              size = 2)))
 
 p4 <- ggplot(wines, aes(sulfur.dioxide.ratio, total.sulfur.dioxide, color = ordered(quality))) +
   geom_jitter(alpha = 1/3) +
@@ -633,14 +544,15 @@ p4 <- ggplot(wines, aes(sulfur.dioxide.ratio, total.sulfur.dioxide, color = orde
                      palette = 'RdYlBu',
                      guide = guide_legend(title = 'Quality',
                                           reverse = T,
-                                          override.aes = list(alpha = 1, size = 2)))
+                                          override.aes = list(alpha = 1, 
+                                                              size = 2)))
 
 grid.arrange(p1, p2, p3, p4)
 ```
 
 Revisiting this chart from the bivariate plots section, but now colored by quality score. None of the charts indicate that this factors are well fit for a good linear model for predicting quality. However, some regions with higher concentrations of good and bad quality wines are defined, although not very clearly.
 
-```{r echo=FALSE, acid_quality}
+```{r, acid_quality}
 p1 <- ggplot(wines, aes(fixed.acidity, pH, color = ordered(quality))) +
   geom_jitter(alpha = 2/3) +
   coord_cartesian(xlim = c(quantile(wines$fixed.acidity, .01),
@@ -651,7 +563,8 @@ p1 <- ggplot(wines, aes(fixed.acidity, pH, color = ordered(quality))) +
                      palette = 'RdYlBu',
                      guide = guide_legend(title = 'Quality',
                                           reverse = T,
-                                          override.aes = list(alpha = 1, size = 2)))
+                                          override.aes = list(alpha = 1, 
+                                                              size = 2)))
 
 p2 <- ggplot(wines, aes(volatile.acidity, pH, color = ordered(quality))) +
   geom_jitter(alpha = 2/3) +
@@ -663,7 +576,8 @@ p2 <- ggplot(wines, aes(volatile.acidity, pH, color = ordered(quality))) +
                      palette = 'RdYlBu',
                      guide = guide_legend(title = 'Quality',
                                           reverse = T,
-                                          override.aes = list(alpha = 1, size = 2)))
+                                          override.aes = list(alpha = 1, 
+                                                              size = 2)))
 
 p3 <- ggplot(wines, aes(citric.acid, pH, color = ordered(quality))) +
   geom_jitter(alpha = 2/3) +
@@ -675,14 +589,15 @@ p3 <- ggplot(wines, aes(citric.acid, pH, color = ordered(quality))) +
                      palette = 'RdYlBu',
                      guide = guide_legend(title = 'Quality',
                                           reverse = T,
-                                          override.aes = list(alpha = 1, size = 2)))
+                                          override.aes = list(alpha = 1, 
+                                                              size = 2)))
 
 grid.arrange(p1, p2, p3, ncol = 2)
 ```
 
 Revisiting this charts and adding quality as color, nothin very useful seemed to appear.
 
-```{r echo=FALSE, Building_the_Linear_Model}
+```{r, Building_the_Linear_Model}
 m1 <- lm(quality ~ alcohol, data = wines)
 m2 <- update(m1, ~ . + volatile.acidity)
 m3 <- update(m2, ~ . + residual.sugar)
@@ -714,37 +629,34 @@ Since there is a large correlation between some of the variables, some sort of f
 # Final Plots and Summary
 
 ### Plot One
-```{r echo=FALSE, Plot_One}
-p1 <- ggplot(wines, aes(alcohol, quality)) +
-  geom_jitter(alpha = 1/10) +
-  ggtitle("Scatterplot") +
-  xlab("Alcohol (% by volume)") +
-  ylab("Quality")
-
-p2 <- ggplot(wines, aes(ordered(quality), alcohol)) +
-  geom_boxplot() +
-  coord_flip() +
-  ggtitle("Boxplot") +
-  ylab("Alcohol (% by volume)") +
-  xlab("Quality")
-
-grid.arrange(p1, p2, top = "Alcohol x Quality")
+```{r, Plot_One}
+box_jitter("alcohol") +
+  ggtitle("Alcohol x Quality") +
+  xlab("Quality") +
+  ylab("Alcohol (% by volume)")
 ```
 
 ### Description One
-These charts depict the relation between alcohol concentration and quality score. For scores from 5 to 9, quality increases as alcohol increases, and for scores 3 and 4 the relation is the inverse. Alcohol has the largest correlation with quality among all the variables in the dataset, with a Pearson's correlation coefficient of .436.
+This chart depicts the relation between alcohol concentration and quality score. For scores from 5 to 9, quality increases as alcohol increases, and for scores 3 and 4 the relation is the inverse. Alcohol has the largest correlation with quality among all the variables in the dataset, with a Pearson's correlation coefficient of .436.
 
 ### Plot Two
-```{r echo=FALSE, Plot_Two}
+```{r, Plot_Two}
+wines$alcohol.bins <- with(wines, cut(alcohol, 4))
+
 ggplot(wines, aes(residual.sugar, density, color = alcohol.bins)) +
   geom_point(alpha = 1/2) +
-  coord_cartesian(xlim = c(0, quantile(wines$residual.sugar, .99)),
-                  ylim = c(min(wines$density), quantile(wines$density, .999))) +
-  scale_color_brewer(type = 'div',
-                     palette = 'RdYlBu',
+  geom_smooth(method = "lm") +
+  coord_trans(x = "log10", 
+              limx = c(min(wines$residual.sugar),
+                       quantile(wines$residual.sugar, .999)),
+              limy = c(min(wines$density),
+                       quantile(wines$density, .999))) +
+  scale_color_brewer(type = 'seq',
+                     palette = 'YlOrRd',
                      guide = guide_legend(title = 'Alcohol Bins (% by volume)',
                                           reverse = T,
-                                          override.aes = list(alpha = 1, size = 2))) +
+                                          override.aes = list(alpha = 1, 
+                                                              size = 2))) +
   ggtitle("Relation between density, residual sugar and alcohol") +
   xlab("Residual Sugar (g / dm^3)") +
   ylab("Density (g / cm^3)")
@@ -754,24 +666,30 @@ ggplot(wines, aes(residual.sugar, density, color = alcohol.bins)) +
 A very interesting relation is shown in this chart. Given a value of residual sugar, density increases as alcohol decreases. This is in some extent due to the fermentation process of winemaking, in which sugar is consumed to generate alcohol. Since alcohol is less dense than water and sugar is more dense than water, this process makes the density of the wine decrease.
 
 ### Plot Three
-```{r echo=FALSE, Plot_Three}
-ggplot(wines, aes(residual.sugar, density, color = ordered(quality))) +
+```{r, Plot_Three}
+ggplot(wines, aes(residual.sugar, density, color = quality.bins)) +
   geom_point(alpha = 2/3) +
-  coord_cartesian(xlim = c(0, quantile(wines$residual.sugar, .99)),
-                  ylim = c(min(wines$density), quantile(wines$density, .999))) +
-  scale_color_brewer(type = 'div',
-                     palette = 'RdYlBu',
+  geom_smooth(method = "lm", se = FALSE) +
+  coord_trans(x = "log10", 
+              limx = c(min(wines$residual.sugar),
+                       quantile(wines$residual.sugar, .999)),
+              limy = c(min(wines$density),
+                       quantile(wines$density, .999))) +
+  scale_color_brewer(type = 'seq',
+                     palette = 'YlOrRd',
                      guide = guide_legend(title = 'Quality',
                                           reverse = T,
-                                          override.aes = list(alpha = 1, size = 2))) +
-  facet_wrap(~ alcohol.bins) +
-  ggtitle("Relation between density, residual sugar and quality by alcohol buckets") +
-  xlab("Residual Sugar (g / dm^3)") +
+                                          override.aes = list(alpha = 1, 
+                                                              size = 2))) +
+  ggtitle("Relation between density, residual sugar and quality") +
+  xlab("Residual Sugar (g / dm^3), log10 scale") +
   ylab("Density (g / cm^3)")
 ```
 
 ### Description Three
-This chart show how quality relates with density and residual sugar, faceted by alcohol buckets. Good quality wines are concentrated on the two larger alcohol concentration buckets, and in the lower half of each chart, meaning that density is lower than average. Also, residual sugar tends to be smaller as alcohol increases.
+This chart shows how quality relates with density and residual sugar. The two lowest and highest quality levels have been grouped to improve visibility.
+
+It is noticeable that, for a given residual sugar concentration, quality increases as density increases. The same occurs if you fix density and increase residual sugar.
 
 ------
 
